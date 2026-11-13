@@ -1,65 +1,56 @@
-# Analisando o Pix com IA: do dado aberto do Banco Central à interpretação
+# Pix na Prática com IA
 
-Material da aula que mostra como usar Inteligência Artificial para transformar dados abertos do Pix em informação: da coleta na API do Banco Central à leitura crítica dos resultados.
+**Do Banco Central à apresentação com Claude, Gemini e Gamma**
 
-O recorte analisado são as **pessoas físicas (PF) do estado de São Paulo**, de janeiro a novembro de 2026.
+Material da aula que mostra como transformar os dados abertos do Pix do Banco Central em gráficos, mapa e slides, com cada IA no papel em que ela é melhor:
 
-## O que tem neste repositório
+| Etapa | Ferramenta | O que faz |
+|---|---|---|
+| 1. Dados | Banco Central | Fornece o JSON com as transações Pix por município |
+| 2. Tratamento | Claude + Power Query | Escreve o código M que limpa e organiza a base |
+| 3. Visuais | Excel + Gemini | Tabela dinâmica por estado; o Gemini cria 4 gráficos e 1 mapa |
+| 4. Roteiro | Claude | Escreve o prompt da apresentação com os números reais |
+| 5. Slides | Gamma | Monta a apresentação final |
+
+## Estrutura do repositório
 
 | Pasta | Conteúdo |
 |---|---|
-| `dados/json/` | Arquivo original baixado da API do Banco Central (61.292 registros), compactado em .zip porque tem 26 MB. Descompacte para usar |
-| `dados/xlsx/` | Mesmo conteúdo convertido para Excel com ajuda de IA, sem perda de dados |
-| `slides/` | Apresentação da aula (.pptx) |
-| `prompts/` | Prompts usados com a IA em cada etapa |
+| `dados/` | JSON original da API do Banco Central (jan/2025 a nov/2026, Brasil inteiro, 128.141 registros), compactado em .zip porque tem 55 MB. Descompacte para usar. |
+| `power-query/` | Código M do tratamento, pronto para colar no Editor Avançado |
+| `prompts/` | Manual de Prompts (Word e PDF) e o prompt do Gemini com os dados por estado já preenchidos |
+| `slides/` | Slides da aula (.pptx) |
 
 ## Fonte dos dados
 
-- **Banco Central do Brasil**, Pix Dados Abertos, API v1 (Olinda)
-- Recurso: `TransacoesPixPorMunicipio`
-- Endereço: https://olinda.bcb.gov.br/olinda/servico/Pix_DadosAbertos/versao/v1/aplicacao#!/recursos
+- **Banco Central do Brasil**, Pix Dados Abertos, API v1 (Olinda), recurso `TransacoesPixPorMunicipio`
+- Mapa dos estados: **IBGE**, API de malhas territoriais
 
-### Dicionário das colunas
+### Colunas usadas na análise
 
 | Coluna | Significado |
 |---|---|
-| `AnoMes` | Ano e mês de referência (ex.: 202605 = maio/2026) |
-| `Municipio_Ibge`, `Municipio` | Código IBGE e nome do município |
-| `Estado_Ibge`, `Estado` | Código IBGE e nome do estado |
-| `Sigla_Regiao`, `Regiao` | Região do país |
-| `VL_PagadorPF` / `QT_PagadorPF` | Valor (R$) e quantidade de Pix **enviados** por pessoas físicas |
-| `VL_PagadorPJ` / `QT_PagadorPJ` | Valor (R$) e quantidade de Pix **enviados** por pessoas jurídicas |
-| `VL_RecebedorPF` / `QT_RecebedorPF` | Valor (R$) e quantidade de Pix **recebidos** por pessoas físicas |
-| `VL_RecebedorPJ` / `QT_RecebedorPJ` | Valor (R$) e quantidade de Pix **recebidos** por pessoas jurídicas |
-| `QT_PES_*` | Quantidade de pessoas pagadoras ou recebedoras |
+| `Ano`, `Mês`, `Nome do Mês` | Criadas a partir de `AnoMes` (ex.: 202607 → 2026, 7, Julho) |
+| `Municipio`, `Estado` | Localização do pagador ou recebedor |
+| `VL_PagadorPF` | Valor (R$) enviado via Pix por pessoas físicas |
+| `VL_RecebedorPF` | Valor (R$) recebido via Pix por pessoas físicas |
 
-> Observação: 11 registros (um por mês) aparecem como município "N/D" e estado "NAO INFORMADO", sem código IBGE. Eles vêm assim da própria fonte.
+## Cuidados com os dados
 
-## Etapas da aula
-
-1. **Coleta:** download do JSON na API do Banco Central.
-2. **IA organiza:** conversão do JSON para Excel, conferida linha a linha contra o original.
-3. **Gráficos:** filtro de São Paulo e de pessoas físicas, com valores mensais pagos e recebidos.
-4. **Interpretação:** leitura crítica, levantamento de hipóteses e cuidados com os dados.
-
-## Principais achados (São Paulo, PF, jan–out/2026)
-
-- Pessoas físicas **pagaram R$ 2,72 trilhões** e **receberam R$ 2,78 trilhões** via Pix, cerca de 25% do total pago por PFs no Brasil.
-- Em **todos os meses** elas receberam mais do que pagaram: são **R$ 55 bilhões** a mais no período.
-- Valor médio de **R$ 215 por Pix pago** e **R$ 404 por Pix recebido**.
-- Os valores cresceram cerca de **14%** de janeiro a outubro. Fevereiro é o vale do ano, por ser um mês mais curto e com Carnaval.
-- **Novembro está incompleto** na data da coleta e não deve ser comparado com os meses fechados.
+- **Mês incompleto:** novembro de 2026 ainda estava em andamento na data da coleta.
+- **Comparação entre anos:** 2025 tem 12 meses e 2026 vai só até novembro. Para o crescimento anual (YoY), compare os mesmos meses (janeiro a outubro) nos dois anos.
+- **Bilhões sem perder precisão:** os valores ficam em reais no Power Query. Os bilhões aparecem só pelo formato da célula no Excel.
+- **Registros "NAO INFORMADO":** são transações sem estado identificado e ficam fora dos gráficos por estado.
 
 ## Como reproduzir
 
-1. Baixe os dados na API do Banco Central (link acima) ou descompacte o arquivo .zip em `dados/json/`.
-2. Use os prompts da pasta `prompts/` em uma ferramenta de IA para converter e analisar os dados.
-3. No Excel, filtre `Estado = SÃO PAULO` e some as colunas `VL_PagadorPF` e `VL_RecebedorPF` por `AnoMes`.
-4. Compare os seus resultados com os desta aula.
+1. Descompacte o arquivo da pasta `dados/`.
+2. No Excel: Dados › Obter Dados › De Arquivo › De JSON. Abra o Editor Avançado e cole o código da pasta `power-query/`, trocando o caminho do arquivo.
+3. Monte a tabela dinâmica por estado e siga o **Manual de Prompts**, na pasta `prompts/`.
 
 ## Autor
 
-**Prof. George**, economista, cientista de dados e educador. Proativa Educação Corporativa.
+**George Lucas Máximo Ferreira**, economista, cientista de dados e educador. Proativa Educação Corporativa.
 Currículo Lattes: http://lattes.cnpq.br/7384837321788311
 
 ## Licença
